@@ -40,6 +40,7 @@ def criar_cliente(cliente: Cliente):
     }
 
 #Listar Clientes (GET)
+@app.get("/clientes/")
 def listar_clientes():
     """Listar todos os Clientes Criados"""
     return{
