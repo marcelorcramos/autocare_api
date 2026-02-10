@@ -88,6 +88,7 @@ def deletar_cliente(cliente_id : int):
     return {
         "mensagem" : f"Cliente ID {cliente_id} removido!",
         "cliente_removido" : cliente_removido,
+        "clientes restantes" : clientes_db,
         "total_clientes" : len(clientes_db)
     }
 
