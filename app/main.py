@@ -58,6 +58,40 @@ def buscar_cliente(cliente_id: int):
 
     return clientes_db[cliente_id - 1]
 
+@app.put("/clientes/{cliente_id}")
+def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente):
+    """Atualiza um cliente já existente"""
+    if cliente_id < 1 or cliente_id > len(clientes_db):
+        return {"erro": f"Cliente ID {cliente_id} não encontrado"}
+
+    #Mantém o ID original
+    cliente_dict = cliente_atualizado.dict()
+    cliente_dict["id"] = cliente_id
+
+    #Atualiza na "base de dados"
+    clientes_db[cliente_id - 1] = cliente_dict
+
+    return{
+        "mensagem" : f"Cliente ID {cliente_id} atualizado!",
+        "cliente" : cliente_dict
+    }
+
+@app.delete("/clientes/{cliente_id}")
+def deletar_cliente(cliente_id : int):
+    """Remove um cliente"""
+    if cliente_id < 1 or cliente_id > len(clientes_db):
+        return {"erro": f"ClienteID {cliente_id} não encontrado"}
+
+    #Remove da Lista
+    cliente_removido = clientes_db.pop(cliente_id - 1)
+
+    return {
+        "mensagem" : f"Cliente ID {cliente_id} removido!",
+        "cliente_removido" : cliente_removido,
+        "total_clientes" : len(clientes_db)
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
