@@ -1,4 +1,3 @@
-# app/routers/clientes.py
 from fastapi import APIRouter
 from app.models import Cliente
 from app.database import clientes_db

@@ -1,4 +1,3 @@
-# app/routers/veiculos.py
 from fastapi import APIRouter
 from app.models import Veiculo
 from app.database import veiculos_db, clientes_db
