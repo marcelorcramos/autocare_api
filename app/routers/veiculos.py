@@ -77,5 +77,30 @@ def atualizar_veiculo (veiculo_id : int, veiculo_atualizado: Veiculo):
         "erro" : f"Veículo ID {veiculo_id} não encontrado!"
     }
 
+@router.get("/clientes/{cliente_id}/veiculos")
+def veiculos_do_cliente(cliente_id : int):
+    """Listar todos os veículos de um cliente"""
+    #Verifica se existe o cliente
+    cliente_existe = False
+    for c in clientes_db:
+        if c["id"] == cliente_id:
+            cliente_existe = True
+            break
+    
+    if not cliente_existe:
+        return {
+            "erro" : f"Cliente ID {cliente_id} não encontrado!"
+        }
+    
+    veiculos_cliente = [
+        v for v in veiculos_db
+        if v ["cliente_id"] == cliente_id
+    ]
+
+    return{
+        "cliente_id" : cliente_id,
+        "total_veiculos" : len(veiculos_cliente),
+        "veiculos": veiculos_cliente
+    }
 
 
