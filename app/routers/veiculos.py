@@ -44,3 +44,19 @@ def buscar_veiculo(veiculo_id: int):
         
     return {"erro": f"Veículo ID {veiculo_id} não encontrado"}
 
+@router.delete("/veiculos/{veiculo_id}")
+def deletar_veiculo (veiculo_id: int):
+    """Remover veículo existente"""
+    for indice, veiculo in enumerate(veiculos_db):
+        if veiculo["id"] == veiculo_id:
+            veiculo_removido = veiculos_db.pop(indice)
+
+            return {
+                "mensagem" : f"Veículo ID {veiculo_id} removido com sucesso!",
+                "veiculo_removido" : veiculo_removido,
+                "total_veiculos": len(veiculos_db)
+            }
+
+    return{"erro" : f"Veículo ID {veiculo_id} não encontrado"}
+
+

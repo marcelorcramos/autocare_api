@@ -29,6 +29,7 @@ def listar_clientes():
 @router.get("/{cliente_id}")
 def buscar_cliente(cliente_id: int):
     """Buscar cliente pelo ID"""
+    #For para evitar possíveis clientes excluídos
     for cliente in clientes_db:
         if cliente["id"] == cliente_id:
             return cliente
@@ -53,13 +54,17 @@ def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente):
 @router.delete("/{cliente_id}")
 def deletar_cliente(cliente_id: int):
     """Remover cliente"""
-    if cliente_id < 1 or cliente_id > len(clientes_db):
-        return {"erro": f"Cliente ID {cliente_id} não encontrado"}
+    for indice, cliente in enumerate(clientes_db):
+        if cliente["id"] == cliente_id:
+            cliente_removido = clientes_db.pop(indice)
+
+            return {
+                "mensagem": f"Cliente ID {cliente_id} removido!",
+                "cliente_removido": cliente_removido,
+                "total_clientes": len(clientes_db)
+            }
+            
+    return {"erro": f"Cliente ID {cliente_id} não encontrado"}
+
     
-    cliente_removido = clientes_db.pop(cliente_id - 1)
-    
-    return {
-        "mensagem": f"Cliente ID {cliente_id} removido!",
-        "cliente_removido": cliente_removido,
-        "total_clientes": len(clientes_db)
-    }
+   
