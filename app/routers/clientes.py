@@ -39,16 +39,19 @@ def buscar_cliente(cliente_id: int):
 @router.put("/{cliente_id}")
 def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente):
     """Atualizar cliente existente"""
-    if cliente_id < 1 or cliente_id > len(clientes_db):
-        return {"erro": f"Cliente ID {cliente_id} não encontrado"}
-    
-    cliente_dict = cliente_atualizado.dict()
-    cliente_dict["id"] = cliente_id
-    clientes_db[cliente_id - 1] = cliente_dict
-    
+    for indice, cliente in enumerate(clientes_db):
+        if cliente["id"] == cliente_id:
+            cliente_dict = cliente_atualizado.dict()
+            cliente_dict["id"] = cliente_id
+            clientes_db[indice] = cliente_dict_dict
+
+            return{
+                "mensagem" : f"Cliente ID {cliente_id} atualizado!",
+                "cliente" : cliente_dict
+            }
+
     return {
-        "mensagem": f"Cliente ID {cliente_id} atualizado!",
-        "cliente": cliente_dict
+        "erro" : f"Cliente ID {cliente_id} não encontrado!"
     }
 
 @router.delete("/{cliente_id}")

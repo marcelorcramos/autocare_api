@@ -59,4 +59,23 @@ def deletar_veiculo (veiculo_id: int):
 
     return{"erro" : f"Veículo ID {veiculo_id} não encontrado"}
 
+@router.put("/veiculos/{veiculo_id}")
+def atualizar_veiculo (veiculo_id : int, veiculo_atualizado: Veiculo):
+    """Atualizar Informações do veículo"""
+    for indice, veiculo in enumerate(veiculos_db):
+        if veiculo["id"] == veiculo_id:
+            veiculo_dict = veiculo_atualizado.dict()
+            veiculo_dict["id"] = veiculo_id
+            veiculos_db[indice] = veiculo_dict
+
+            return {
+                "mensagem" : f"Veículo ID {veiculo_id} atualizado!",
+                "veiculo" : veiculo_dict
+            }
+
+    return{
+        "erro" : f"Veículo ID {veiculo_id} não encontrado!"
+    }
+
+
 
