@@ -29,9 +29,11 @@ def listar_clientes():
 @router.get("/{cliente_id}")
 def buscar_cliente(cliente_id: int):
     """Buscar cliente pelo ID"""
-    if cliente_id < 1 or cliente_id > len(clientes_db):
-        return {"erro": f"Cliente ID {cliente_id} não encontrado"}
-    return clientes_db[cliente_id - 1]
+    for cliente in clientes_db:
+        if cliente["id"] == cliente_id:
+            return cliente
+    #Tratamento erro    
+    return {"erro" : f"Cliente ID {cliente_id} não encontrado!"}
 
 @router.put("/{cliente_id}")
 def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente):
