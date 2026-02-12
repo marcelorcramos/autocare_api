@@ -1,9 +1,12 @@
 from fastapi import FastAPI
-from app.database import clientes_db  # só para o health check
-from app.routers import clientes, veiculos
+from app.database import clientes_db, veiculos_db
 
-# Criar app FastAPI
+from app.routers import clientes_router, veiculos_router
+
 app = FastAPI(title="AutoCare API", version="1.0.0")
+
+app.include_router(clientes_router)
+app.include_router(veiculos_router) 
 
 # Rotas públicas
 @app.get("/")
@@ -17,10 +20,6 @@ def health():
         "clientes_cadastrados": len(clientes_db),
         "veiculos_cadastrados": len(veiculos_db)
     }
-
-# Incluir os routers
-app.include_router(clientes.router)
-app.include_router(veiculos.router)
 
 if __name__ == "__main__":
     import uvicorn

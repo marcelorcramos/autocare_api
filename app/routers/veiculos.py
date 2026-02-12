@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter 
 from app.models import Veiculo
 from app.database import veiculos_db, clientes_db
 
-# Criar router específico para veículos
+# MUDE de FastAPI() para APIRouter()
 router = APIRouter(prefix="/veiculos", tags=["Veículos"])
 
 @router.post("/")
@@ -34,3 +34,13 @@ def listar_veiculos():
         "total": len(veiculos_db),
         "veiculos": veiculos_db
     }
+
+@router.get("/veiculos/{veiculo_id}")
+def buscar_veiculo(veiculo_id: int):
+    """Buscar veículo por ID"""
+    for veiculo in veiculos_db:
+        if veiculo["id"] == veiculo_id: 
+            return veiculo
+        
+    return {"erro": f"Veículo ID {veiculo_id} não encontrado"}
+

@@ -3,7 +3,7 @@ from app.models import Cliente
 from app.database import clientes_db
 
 # Criar router específico para clientes
-router = APIRouter(prefix="/clientes", tags=["Clientes"])
+router = APIRouter(prefix="/clientes", tags=["Clientes"]) 
 
 @router.post("/")
 def criar_cliente(cliente: Cliente):
