@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.models import Cliente
 from app.database import clientes_db
+from typing import Optional
 
 # Criar router específico para clientes
 router = APIRouter(prefix="/clientes", tags=["Clientes"]) 
@@ -35,6 +36,35 @@ def buscar_cliente(cliente_id: int):
             return cliente
     #Tratamento erro    
     return {"erro" : f"Cliente ID {cliente_id} não encontrado!"}
+
+@router.get("/clientes/busca/")
+def buscar_clientes(
+    nome: Optional[str] = None,
+    email: Optional[str] = None,
+    ordenar_por: str = "id",
+    ordem: str = "asc"
+):
+    """Busca avançada de clientes"""
+    resultados = clientes_db.copy()
+
+    #Filtros
+    if nome:
+        resultados = [c for c in resultados if nome.lower() in c["nome"].lower()]
+
+    if email:
+        resultados = [c for c in resultados if email.lower() in c["email"].lower()]
+
+    #Ordenação
+    reverse = (ordem.lower() == "desc")
+    resultados.sort(key=lambda x: x.get(ordenar_por, ""), reverse=reverse)
+
+    return{
+        "total": len(resultados),
+        "filtros": {"nome": nome, "email": email},
+        "ordenacao": {"por": ordenar_por, "ordem": ordem},
+        "clientes": resultados
+    }
+
 
 @router.put("/{cliente_id}")
 def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente):
