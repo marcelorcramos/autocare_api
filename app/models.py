@@ -8,6 +8,15 @@ class Cliente(BaseModel):
     nome: str
     email: str
     telefone: str
+    nif: str
+    data_nascimento: date
+
+    @validator('nif')
+    def validar_nif(cls, v):
+        numeros = re.sub(r'\\D', '', v)
+        if len(numeros) != 9:
+            raise ValueError('Nif deve conter 9 dígitos')
+        return numeros
 
     @validator('telefone')
     def validar_telefone(cls, v):
