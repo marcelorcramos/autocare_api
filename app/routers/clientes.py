@@ -69,5 +69,4 @@ def deletar_cliente(cliente_id: int):
             
     return {"erro": f"Cliente ID {cliente_id} não encontrado"}
 
-    
-   
+
