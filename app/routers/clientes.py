@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.models import Cliente
 from app.database import clientes_db
 from typing import Optional
+import re
 
 # Criar router específico para clientes
 router = APIRouter(prefix="/clientes", tags=["Clientes"]) 
@@ -41,6 +42,7 @@ def buscar_cliente(cliente_id: int):
 def buscar_clientes(
     nome: Optional[str] = None,
     email: Optional[str] = None,
+    nif: Optional[str] = None,
     ordenar_por: str = "id",
     ordem: str = "asc"
 ):
@@ -53,14 +55,18 @@ def buscar_clientes(
 
     if email:
         resultados = [c for c in resultados if email.lower() in c["email"].lower()]
-
+    
+    if nif:
+        nif_limpo = re.sub(r'\D', '', nif)
+        resultados = [c for c in resultados if nif_limpo in c["nif"]]
+  
     #Ordenação
     reverse = (ordem.lower() == "desc")
     resultados.sort(key=lambda x: x.get(ordenar_por, ""), reverse=reverse)
 
     return{
         "total": len(resultados),
-        "filtros": {"nome": nome, "email": email},
+        "filtros": {"nome": nome, "email": email, "nif": nif},
         "ordenacao": {"por": ordenar_por, "ordem": ordem},
         "clientes": resultados
     }
@@ -73,7 +79,7 @@ def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente):
         if cliente["id"] == cliente_id:
             cliente_dict = cliente_atualizado.dict()
             cliente_dict["id"] = cliente_id
-            clientes_db[indice] = cliente_dict_dict
+            clientes_db[indice] = cliente_dict
 
             return{
                 "mensagem" : f"Cliente ID {cliente_id} atualizado!",

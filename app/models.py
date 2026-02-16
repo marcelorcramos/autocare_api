@@ -14,7 +14,7 @@ class Cliente(BaseModel):
 
     @validator('nif')
     def validar_nif(cls, v):
-        numeros = re.sub(r'\\D', '', v)
+        numeros = re.sub(r'\D', '', v)
         if len(numeros) != 9:
             raise ValueError('Nif deve conter 9 dígitos')
         return numeros
@@ -22,7 +22,7 @@ class Cliente(BaseModel):
     @validator('telefone')
     def validar_telefone(cls, v):
         #Remove tudo que não é número
-        numeros = re.sub(r'\\D', '', v)
+        numeros = re.sub(r'\D', '', v)
 
         if len(numeros) < 9 or len(numeros) > 12:
             raise ValueError('Telefonone deve ter entre 9 a 12 dígitos')
