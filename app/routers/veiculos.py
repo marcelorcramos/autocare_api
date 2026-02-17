@@ -1,6 +1,8 @@
 from fastapi import APIRouter 
 from app.models import Veiculo
 from app.database import veiculos_db, clientes_db
+from typing import Optional
+import re
 
 # MUDE de FastAPI() para APIRouter()
 router = APIRouter(prefix="/veiculos", tags=["Veículos"])
@@ -33,6 +35,38 @@ def listar_veiculos():
     return {
         "total": len(veiculos_db),
         "veiculos": veiculos_db
+    }
+
+@router.get("/veiculos/busca/")
+def buscar_veiculos(
+    placa: Optional[str] = None,
+    marca: Optional[str] = None,
+    modelo: Optional[str] = None,
+    ordenar_por: str = "id",
+    ordem: str = "asc"
+):
+    """Busca avançada de veículos"""
+    resultados = veiculos_db.copy()
+
+    #Filtros
+    if placa:
+        resultados = [v for v in resultados if placa.lower() in v["placa"].lower()]
+
+    if marca:
+        resultados = [v for v in resultados if marca.lower() in v["marca"].lower()]
+    
+    if modelo:
+        resultados = [v for v in resultados if modelo.lower() in v["modelo"].lower()]
+
+    #Ordenação
+    reverse = (ordem.lower() == "desc")
+    resultados.sort(key=lambda x: x.get(ordenar_por, ""), reverse=reverse)
+
+    return{
+        "total": len(resultados),
+        "filtros": {"placa": placa, "marca": marca, "modelo": modelo},
+        "ordenacao": {"por": ordenar_por, "ordem": ordem},
+        "veiculos": resultados
     }
 
 @router.get("/veiculos/{veiculo_id}")
