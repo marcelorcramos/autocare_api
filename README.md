@@ -110,7 +110,7 @@ Este projeto está sob a licença MIT.
 
 ## 📞 **Contato**
 
-**Autor**: Marcelo Ramos
+**Autor**: Marcelo Ramos | 
 **Email**: marcelorcramos@gmail.com
 
 ---
