@@ -7,7 +7,7 @@
 
 ## 📋 **Sobre o Projeto**
 
-**AutoCare API** é uma API RESTful em desenvolvimento para gestão de oficinas mecânicas e concessionárias. O projeto está em constante evolução, com novos endpoints e funcionalidades sendo adicionados regularmente.
+**AutoCare API** é uma API RESTful em desenvolvimento para gestão de oficinas mecânicas e concessionárias. Com o principal objetivo de aprender e desenvolver novas skills. O projeto está em constante evolução, com novos endpoints e funcionalidades sendo adicionados regularmente.
 
 ### 🎯 **Objetivo**
 Fornecer uma solução completa para gerenciamento de:
