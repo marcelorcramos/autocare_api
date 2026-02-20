@@ -61,6 +61,23 @@ class Cliente(BaseModel):
         else:
             return f"{numeros[:3]} {numeros[3:6]} {numeros[6:]}"
 
+    @validator('data_nascimento')
+    def validar_data_nascimento(cls, v):
+        data_atual = date.today()
+        
+        idade = data_atual.year - v.year - ((data_atual.month, data_atual.day) < (v.month, v.day))
+        
+        if idade < 18:
+            raise ValueError('Cliente deve ter pelo menos 18 anos')
+        
+        if v > data_atual:
+            raise ValueError('Data de nascimento não pode ser no futuro')
+        
+        if idade > 120:
+            raise ValueError('Data de nascimento muito antiga')
+        
+        return v
+
 class Veiculo(BaseModel):
     placa: str
     marca: str
