@@ -19,6 +19,32 @@ class Cliente(BaseModel):
             raise ValueError('Nif deve conter 9 dígitos')
         return numeros
 
+    @validator('email')
+    def validar_email(cls,v):
+        email = v.strip()
+
+        if '@' not in email:
+            raise ValueError('Email deve conter @')
+        
+        if '.com' not in email:
+            raise ValueError('Email deve conter .com')
+
+        partes = email.split('@')
+        if len(partes) != 2:
+            raise ValueError ('Email deve conter apenas um @')
+
+        if '.com' not in partes[1]:
+            raise ValueError('.com deve vir após o @')
+
+        if not partes[0]:
+            raise ValueError ('Email deve ter um nome de usuário')
+        
+        if not partes[1].replace('.com', ''):
+            raise ValueError ('Email deve ter um domínio válido')
+
+        return email.lower()
+
+
     @validator('telefone')
     def validar_telefone(cls, v):
         #Remove tudo que não é número
