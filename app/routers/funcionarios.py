@@ -19,3 +19,11 @@ def criar_funcionario(funcionario: Funcionario):
         "cliente": funcionario_dict,
         "total_funcionarios": len(funcionarios_db)
     }
+
+@router.get("/")
+def listar_funcionarios():
+    """Listar todos os Funcionários"""
+    return{
+        "total": len(funcionarios_db),
+        "funcionarios": funcionarios_db
+    }
