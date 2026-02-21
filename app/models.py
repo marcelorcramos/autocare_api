@@ -84,6 +84,7 @@ class Funcionario(BaseModel):
     nif: str
     morada: str
     salario: float
+    area: str
     data_nascimento: date
 
     
