@@ -78,6 +78,16 @@ class Cliente(BaseModel):
         
         return v
 
+class Funcionario(BaseModel):
+    nome: str
+    telefone: str
+    nif: str
+    morada: str
+    salario: float
+    data_nascimento: date
+
+    
+
 class Veiculo(BaseModel):
     placa: str
     marca: str
