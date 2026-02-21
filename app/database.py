@@ -2,3 +2,4 @@
 # "Banco de dados"
 clientes_db = []
 veiculos_db = []
+funcionarios_db = []
