@@ -60,6 +60,9 @@ def buscar_funcionarios(
     reverse = (ordem.lower() == "desc")
     resultados.sort(key=lambda x: x.get(ordenar_por,""),reverse = reverse)
 
+    if nivel:
+        resultados = [f for f in resultados if nivel.lower().strip() in f["nivel"].lower().strip()]
+
     return{
         "total": len(resultados),
         "filtros":{"nome":nome, "nif": nif},

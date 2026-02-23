@@ -82,7 +82,7 @@ class Funcionario(BaseModel):
     nome: str
     telefone: str
     nif: str
-    morada: str
+    morada: Optional[str] = None
     nivel: str
     salario: str
     area: str
