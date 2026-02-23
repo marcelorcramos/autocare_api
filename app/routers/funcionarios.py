@@ -39,7 +39,7 @@ def buscar_funcionario(funcionario_id: int):
     return {"erro":f"Funcionário ID {funcionario_id} não encontrado!"}
 
 @router.get("/funcionarios/busca/")
-def buscar_clientes(
+def buscar_funcionarios(
     nome: Optional[str] = None,
     nif: Optional[str] = None,
     area: Optional[str] = None,
@@ -51,11 +51,11 @@ def buscar_clientes(
     resultados = funcionarios_db.copy()
 
     if nome:
-        resultados = [f for f in resultados if nome.lower() in c["nome"].lower()]
+        resultados = [f for f in resultados if nome.lower() in f["nome"].lower()]
 
     if nif:
         nif_limpo = re.sub(r'\D','', nif)
-        resultados = [f for f in resultados if nif_limpo in c["nif"]]
+        resultados = [f for f in resultados if nif_limpo in f["nif"]]
 
     reverse = (ordem.lower() == "desc")
     resultados.sort(key=lambda x: x.get(ordenar_por,""),reverse = reverse)

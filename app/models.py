@@ -83,7 +83,7 @@ class Funcionario(BaseModel):
     telefone: str
     nif: str
     morada: str
-    #salario: str
+    salario: str
     area: str
     nivel: str
     data_nascimento: date
@@ -128,13 +128,16 @@ class Funcionario(BaseModel):
         
         return v
 
-    #@validator('salario')
-    #def validar_salario(cls, v):
-        #numeros = re.sub(r'\D', '', v)
-        #if numeros < 920.00:
-           #raise ValueError('O valor não pode ser menor que o salário mínimo')
-        #return numeros
-
+    @validator('salario')
+    def validar_salario(cls, v):
+        numeros = re.sub(r'\D', '', v)
+        try:
+            salario = float(numeros)
+        except ValueError:
+            raise ValueError ('Salario inválido')
+        if salario < 920.00:
+           raise ValueError('O valor não pode ser menor que o salário mínimo')
+        return salario
     
 
 class Veiculo(BaseModel):
