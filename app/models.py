@@ -83,9 +83,57 @@ class Funcionario(BaseModel):
     telefone: str
     nif: str
     morada: str
-    salario: float
+    #salario: str
     area: str
+    nivel: str
     data_nascimento: date
+
+    @validator('nif')
+    def validar_nif(cls, v):
+        numeros = re.sub(r'\D', '', v)
+        if len(numeros) != 9:
+            raise ValueError('Nif deve conter 9 dígitos')
+        return numeros
+
+    @validator('telefone')
+    def validar_telefone(cls, v):
+        #Remove tudo que não é número
+        numeros = re.sub(r'\D', '', v)
+
+        if len(numeros) < 9 or len(numeros) > 12:
+            raise ValueError('Telefone deve ter entre 9 a 12 dígitos')
+
+        #Formata: +351 XX XXX XXXX ou 9XX XXX XXX
+        if len(numeros) == 9:
+            return f"({numeros[:3]}) {numeros[3:6]} {numeros[6:]}"
+        elif len(numeros) == 11 and numeros.startswith('351'):
+            return f"+{numeros:3} {numeros[3:5]} {numeros[5:8]} {numeros[8:]}"
+        else:
+            return f"{numeros[:3]} {numeros[3:6]} {numeros[6:]}"
+
+    @validator('data_nascimento')
+    def validar_data_nascimento(cls, v):
+        data_atual = date.today()
+        
+        idade = data_atual.year - v.year - ((data_atual.month, data_atual.day) < (v.month, v.day))
+        
+        if idade < 18:
+            raise ValueError('O funcionário deve ter pelo menos 18 anos')
+        
+        if v > data_atual:
+            raise ValueError('Data de nascimento não pode ser no futuro')
+        
+        if idade > 120:
+            raise ValueError('Data de nascimento muito antiga')
+        
+        return v
+
+    #@validator('salario')
+    #def validar_salario(cls, v):
+        #numeros = re.sub(r'\D', '', v)
+        #if numeros < 920.00:
+           #raise ValueError('O valor não pode ser menor que o salário mínimo')
+        #return numeros
 
     
 
