@@ -27,3 +27,14 @@ def listar_funcionarios():
         "total": len(funcionarios_db),
         "funcionarios": funcionarios_db
     }
+
+
+@router.get("/{funcionario_id}")
+def buscar_funcionario(funcionario_id: int):
+    """Buscar funcionario pelo ID"""
+    for funcionario in funcionarios_db:
+        if funcionario["id"] == funcionario_id:
+            return funcionario
+        
+    return {"erro":f"Funcionário ID {funcionario_id} não encontrado!"}
+
