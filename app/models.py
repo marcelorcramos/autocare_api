@@ -83,9 +83,9 @@ class Funcionario(BaseModel):
     telefone: str
     nif: str
     morada: str
+    nivel: str
     salario: str
     area: str
-    nivel: str
     data_nascimento: date
 
     @validator('nif')
@@ -128,15 +128,35 @@ class Funcionario(BaseModel):
         
         return v
 
+    @validator('nivel')
+    def validar_nivel(cls, v):
+        nivel = v.strip().lower()
+        
+        niveis_validos = ['part time', 'part-time', 'full time', 'full-time']
+        
+        if nivel not in niveis_validos:
+            raise ValueError('Nível deve ser "Part Time" ou "Full Time"')
+        
+        if 'part' in nivel:
+            return 'Part Time'
+        return 'Full Time'
+    
     @validator('salario')
-    def validar_salario(cls, v):
+    def validar_salario(cls, v, values):
         numeros = re.sub(r'\D', '', v)
         try:
             salario = float(numeros)
         except ValueError:
             raise ValueError ('Salario inválido')
-        if salario < 920.00:
-           raise ValueError('O valor não pode ser menor que o salário mínimo')
+
+        nivel = values.get('nivel')
+
+        if nivel == 'Full Time' and salario < 920.00:
+            raise ValueError('Salário Full Time não pode ser menor que 920€')
+        
+        if nivel == 'Part Time' and salario < 460.00:
+            raise ValueError('Salário Part Time não pode ser menor que 460€')
+
         return salario
     
 
