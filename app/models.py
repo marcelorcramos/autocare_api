@@ -51,7 +51,7 @@ class Cliente(BaseModel):
         numeros = re.sub(r'\D', '', v)
 
         if len(numeros) < 9 or len(numeros) > 12:
-            raise ValueError('Telefonone deve ter entre 9 a 12 dígitos')
+            raise ValueError('Telefone deve ter entre 9 a 12 dígitos')
 
         #Formata: +351 XX XXX XXXX ou 9XX XXX XXX
         if len(numeros) == 9:
