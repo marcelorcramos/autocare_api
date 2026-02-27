@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.models import Cliente
 from app.database import clientes_db
 from typing import Optional
@@ -7,8 +7,12 @@ import re
 # Criar router específico para clientes
 router = APIRouter(prefix="/clientes", tags=["Clientes"]) 
 
+def get_clientes_db():
+    """Dependência para acessar o banco de dados de clientes"""
+    return clientes_db
+
 @router.post("/")
-def criar_cliente(cliente: Cliente):
+def criar_cliente(cliente: Cliente, clientes_db = Depends(get_clientes_db)):
     """Criar novo Cliente"""
     cliente_dict = cliente.dict()
     cliente_dict["id"] = len(clientes_db) + 1
@@ -21,7 +25,7 @@ def criar_cliente(cliente: Cliente):
     }
 
 @router.get("/")
-def listar_clientes():
+def listar_clientes(clientes_db = Depends(get_clientes_db)):
     """Listar todos os Clientes"""
     return {
         "total": len(clientes_db),
@@ -29,7 +33,7 @@ def listar_clientes():
     }
 
 @router.get("/{cliente_id}")
-def buscar_cliente(cliente_id: int):
+def buscar_cliente(cliente_id: int, clientes_db = Depends(get_clientes_db)):
     """Buscar cliente pelo ID"""
     #For para evitar possíveis clientes excluídos
     for cliente in clientes_db:
