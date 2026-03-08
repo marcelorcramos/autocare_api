@@ -1,140 +1,210 @@
-from fastapi import APIRouter 
-from app.models import Veiculo
-from app.database import veiculos_db, clientes_db
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.db_models import Veiculo as VeiculoDB, Cliente as ClienteDB
+from app.models import Veiculo  # Pydantic (validação de entrada)
 from typing import Optional
 import re
 
-# MUDE de FastAPI() para APIRouter()
 router = APIRouter(prefix="/veiculos", tags=["Veículos"])
 
 @router.post("/")
-def criar_veiculo(veiculo: Veiculo):
+def criar_veiculo(veiculo: Veiculo, db: Session = Depends(get_db)):
     """Criar novo veículo"""
     # Verifica se o cliente existe
-    cliente_existe = False
-    for c in clientes_db:
-        if c["id"] == veiculo.cliente_id:
-            cliente_existe = True
-            break
-    
-    if not cliente_existe:
-        return {"erro": f"Cliente ID {veiculo.cliente_id} não encontrado"}
-    
-    veiculo_dict = veiculo.dict()
-    veiculo_dict["id"] = len(veiculos_db) + 1
-    veiculos_db.append(veiculo_dict)
-    
+    cliente = db.query(ClienteDB).filter(ClienteDB.id == veiculo.cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail=f"Cliente ID {veiculo.cliente_id} não encontrado")
+
+    # Verifica se placa já existe
+    existente = db.query(VeiculoDB).filter(VeiculoDB.placa == veiculo.placa).first()
+    if existente:
+        raise HTTPException(status_code=400, detail=f"Já existe veículo com a placa {veiculo.placa}")
+
+    novo = VeiculoDB(
+        placa=veiculo.placa,
+        marca=veiculo.marca,
+        modelo=veiculo.modelo,
+        ano=veiculo.ano,
+        cor=veiculo.cor,
+        cliente_id=veiculo.cliente_id
+    )
+    db.add(novo)
+    db.commit()
+    db.refresh(novo)
+
     return {
         "mensagem": "Veículo criado com sucesso!",
-        "veiculo": veiculo_dict
+        "veiculo": {
+            "id": novo.id,
+            "placa": novo.placa,
+            "marca": novo.marca,
+            "modelo": novo.modelo,
+            "ano": novo.ano,
+            "cor": novo.cor,
+            "cliente_id": novo.cliente_id
+        }
     }
 
 @router.get("/")
-def listar_veiculos():
+def listar_veiculos(db: Session = Depends(get_db)):
     """Listar todos os veículos"""
+    veiculos = db.query(VeiculoDB).all()
     return {
-        "total": len(veiculos_db),
-        "veiculos": veiculos_db
+        "total": len(veiculos),
+        "veiculos": [
+            {
+                "id": v.id,
+                "placa": v.placa,
+                "marca": v.marca,
+                "modelo": v.modelo,
+                "ano": v.ano,
+                "cor": v.cor,
+                "cliente_id": v.cliente_id
+            }
+            for v in veiculos
+        ]
     }
 
-@router.get("/veiculos/busca/")
+@router.get("/busca/")
 def buscar_veiculos(
     placa: Optional[str] = None,
     marca: Optional[str] = None,
     modelo: Optional[str] = None,
     ordenar_por: str = "id",
-    ordem: str = "asc"
+    ordem: str = "asc",
+    db: Session = Depends(get_db)
 ):
     """Busca avançada de veículos"""
-    resultados = veiculos_db.copy()
+    query = db.query(VeiculoDB)
 
-    #Filtros
     if placa:
-        resultados = [v for v in resultados if placa.lower() in v["placa"].lower()]
-
+        query = query.filter(VeiculoDB.placa.ilike(f"%{placa}%"))
     if marca:
-        resultados = [v for v in resultados if marca.lower() in v["marca"].lower()]
-    
+        query = query.filter(VeiculoDB.marca.ilike(f"%{marca}%"))
     if modelo:
-        resultados = [v for v in resultados if modelo.lower() in v["modelo"].lower()]
+        query = query.filter(VeiculoDB.modelo.ilike(f"%{modelo}%"))
 
-    #Ordenação
-    reverse = (ordem.lower() == "desc")
-    resultados.sort(key=lambda x: x.get(ordenar_por, ""), reverse=reverse)
+    coluna = getattr(VeiculoDB, ordenar_por, VeiculoDB.id)
+    if ordem.lower() == "desc":
+        query = query.order_by(coluna.desc())
+    else:
+        query = query.order_by(coluna.asc())
 
-    return{
+    resultados = query.all()
+
+    return {
         "total": len(resultados),
         "filtros": {"placa": placa, "marca": marca, "modelo": modelo},
         "ordenacao": {"por": ordenar_por, "ordem": ordem},
-        "veiculos": resultados
+        "veiculos": [
+            {
+                "id": v.id,
+                "placa": v.placa,
+                "marca": v.marca,
+                "modelo": v.modelo,
+                "ano": v.ano,
+                "cor": v.cor,
+                "cliente_id": v.cliente_id
+            }
+            for v in resultados
+        ]
     }
 
-@router.get("/veiculos/{veiculo_id}")
-def buscar_veiculo(veiculo_id: int):
+@router.get("/{veiculo_id}")
+def buscar_veiculo(veiculo_id: int, db: Session = Depends(get_db)):
     """Buscar veículo por ID"""
-    for veiculo in veiculos_db:
-        if veiculo["id"] == veiculo_id: 
-            return veiculo
-        
-    return {"erro": f"Veículo ID {veiculo_id} não encontrado"}
+    veiculo = db.query(VeiculoDB).filter(VeiculoDB.id == veiculo_id).first()
+    if not veiculo:
+        raise HTTPException(status_code=404, detail=f"Veículo ID {veiculo_id} não encontrado")
 
-@router.delete("/veiculos/{veiculo_id}")
-def deletar_veiculo (veiculo_id: int):
+    return {
+        "id": veiculo.id,
+        "placa": veiculo.placa,
+        "marca": veiculo.marca,
+        "modelo": veiculo.modelo,
+        "ano": veiculo.ano,
+        "cor": veiculo.cor,
+        "cliente_id": veiculo.cliente_id
+    }
+
+@router.delete("/{veiculo_id}")
+def deletar_veiculo(veiculo_id: int, db: Session = Depends(get_db)):
     """Remover veículo existente"""
-    for indice, veiculo in enumerate(veiculos_db):
-        if veiculo["id"] == veiculo_id:
-            veiculo_removido = veiculos_db.pop(indice)
+    veiculo = db.query(VeiculoDB).filter(VeiculoDB.id == veiculo_id).first()
+    if not veiculo:
+        raise HTTPException(status_code=404, detail=f"Veículo ID {veiculo_id} não encontrado")
 
-            return {
-                "mensagem" : f"Veículo ID {veiculo_id} removido com sucesso!",
-                "veiculo_removido" : veiculo_removido,
-                "total_veiculos": len(veiculos_db)
-            }
+    placa_removida = veiculo.placa
+    db.delete(veiculo)
+    db.commit()
+    total = db.query(VeiculoDB).count()
 
-    return{"erro" : f"Veículo ID {veiculo_id} não encontrado"}
+    return {
+        "mensagem": f"Veículo ID {veiculo_id} removido com sucesso!",
+        "veiculo_removido": placa_removida,
+        "total_veiculos": total
+    }
 
-@router.put("/veiculos/{veiculo_id}")
-def atualizar_veiculo (veiculo_id : int, veiculo_atualizado: Veiculo):
+@router.put("/{veiculo_id}")
+def atualizar_veiculo(veiculo_id: int, veiculo_atualizado: Veiculo, db: Session = Depends(get_db)):
     """Atualizar Informações do veículo"""
-    for indice, veiculo in enumerate(veiculos_db):
-        if veiculo["id"] == veiculo_id:
-            veiculo_dict = veiculo_atualizado.dict()
-            veiculo_dict["id"] = veiculo_id
-            veiculos_db[indice] = veiculo_dict
+    veiculo = db.query(VeiculoDB).filter(VeiculoDB.id == veiculo_id).first()
+    if not veiculo:
+        raise HTTPException(status_code=404, detail=f"Veículo ID {veiculo_id} não encontrado!")
 
-            return {
-                "mensagem" : f"Veículo ID {veiculo_id} atualizado!",
-                "veiculo" : veiculo_dict
-            }
+    # Verifica se o novo cliente_id existe
+    cliente = db.query(ClienteDB).filter(ClienteDB.id == veiculo_atualizado.cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail=f"Cliente ID {veiculo_atualizado.cliente_id} não encontrado")
 
-    return{
-        "erro" : f"Veículo ID {veiculo_id} não encontrado!"
+    veiculo.placa = veiculo_atualizado.placa
+    veiculo.marca = veiculo_atualizado.marca
+    veiculo.modelo = veiculo_atualizado.modelo
+    veiculo.ano = veiculo_atualizado.ano
+    veiculo.cor = veiculo_atualizado.cor
+    veiculo.cliente_id = veiculo_atualizado.cliente_id
+    db.commit()
+    db.refresh(veiculo)
+
+    return {
+        "mensagem": f"Veículo ID {veiculo_id} atualizado!",
+        "veiculo": {
+            "id": veiculo.id,
+            "placa": veiculo.placa,
+            "marca": veiculo.marca,
+            "modelo": veiculo.modelo,
+            "ano": veiculo.ano,
+            "cor": veiculo.cor,
+            "cliente_id": veiculo.cliente_id
+        }
     }
 
 @router.get("/clientes/{cliente_id}/veiculos")
-def veiculos_do_cliente(cliente_id : int):
+def veiculos_do_cliente(cliente_id: int, db: Session = Depends(get_db)):
     """Listar todos os veículos de um cliente"""
-    #Verifica se existe o cliente
-    cliente_existe = False
-    for c in clientes_db:
-        if c["id"] == cliente_id:
-            cliente_existe = True
-            break
-    
-    if not cliente_existe:
-        return {
-            "erro" : f"Cliente ID {cliente_id} não encontrado!"
-        }
-    
-    veiculos_cliente = [
-        v for v in veiculos_db
-        if v ["cliente_id"] == cliente_id
-    ]
+    cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail=f"Cliente ID {cliente_id} não encontrado!")
 
-    return{
-        "cliente_id" : cliente_id,
-        "total_veiculos" : len(veiculos_cliente),
-        "veiculos": veiculos_cliente
+    veiculos = db.query(VeiculoDB).filter(VeiculoDB.cliente_id == cliente_id).all()
+
+    return {
+        "cliente_id": cliente_id,
+        "cliente_nome": cliente.nome,
+        "total_veiculos": len(veiculos),
+        "veiculos": [
+            {
+                "id": v.id,
+                "placa": v.placa,
+                "marca": v.marca,
+                "modelo": v.modelo,
+                "ano": v.ano,
+                "cor": v.cor,
+                "cliente_id": v.cliente_id
+            }
+            for v in veiculos
+        ]
     }
 
 

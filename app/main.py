@@ -1,6 +1,7 @@
-from fastapi import FastAPI
-from app.database import clientes_db, veiculos_db, funcionarios_db, engine
-from app.db_models import Base  # importa os modelos para criar as tabelas
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from app.database import engine, get_db
+from app.db_models import Base, Cliente, Funcionario, Veiculo
 
 from app.routers import clientes_router, veiculos_router, funcionarios_router
 
@@ -19,12 +20,12 @@ def home():
     return {"mensagem": "Bem-vindo ao AutoCare API!", "status": "online"}
 
 @app.get("/health")
-def health():
+def health(db: Session = Depends(get_db)):
     return {
         "status": "saudável", 
-        "clientes_cadastrados": len(clientes_db),
-        "veiculos_cadastrados": len(veiculos_db),
-        "funcionarios_cadastrados": len(funcionarios_db)
+        "clientes_cadastrados": db.query(Cliente).count(),
+        "veiculos_cadastrados": db.query(Veiculo).count(),
+        "funcionarios_cadastrados": db.query(Funcionario).count()
     }
 
 if __name__ == "__main__":

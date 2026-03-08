@@ -1,112 +1,170 @@
-from fastapi import APIRouter, Depends
-from app.models import Cliente
-from app.database import clientes_db
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.db_models import Cliente as ClienteDB
+from app.models import Cliente  # Pydantic (validação de entrada)
 from typing import Optional
 import re
 
 # Criar router específico para clientes
 router = APIRouter(prefix="/clientes", tags=["Clientes"]) 
 
-def get_clientes_db():
-    """Dependência para acessar o banco de dados de clientes"""
-    return clientes_db
-
 @router.post("/")
-def criar_cliente(cliente: Cliente, clientes_db = Depends(get_clientes_db)):
+def criar_cliente(cliente: Cliente, db: Session = Depends(get_db)):
     """Criar novo Cliente"""
-    cliente_dict = cliente.dict()
-    cliente_dict["id"] = len(clientes_db) + 1
-    clientes_db.append(cliente_dict)
+    # Verifica se já existe cliente com mesmo NIF ou email
+    existente = db.query(ClienteDB).filter(
+        (ClienteDB.nif == cliente.nif) | (ClienteDB.email == cliente.email)
+    ).first()
+    if existente:
+        raise HTTPException(status_code=400, detail="Já existe cliente com este NIF ou email!")
+
+    novo_cliente = ClienteDB(
+        nome=cliente.nome,
+        email=cliente.email,
+        telefone=cliente.telefone,
+        nif=cliente.nif,
+        data_nascimento=cliente.data_nascimento
+    )
+    db.add(novo_cliente)
+    db.commit()
+    db.refresh(novo_cliente)
 
     return {
         "mensagem": "Cliente criado com sucesso!",
-        "cliente": cliente_dict,
-        "total_clientes": len(clientes_db)
+        "cliente": {
+            "id": novo_cliente.id,
+            "nome": novo_cliente.nome,
+            "email": novo_cliente.email,
+            "telefone": novo_cliente.telefone,
+            "nif": novo_cliente.nif,
+            "data_nascimento": str(novo_cliente.data_nascimento)
+        }
     }
 
 @router.get("/")
-def listar_clientes(clientes_db = Depends(get_clientes_db)):
+def listar_clientes(db: Session = Depends(get_db)):
     """Listar todos os Clientes"""
+    clientes = db.query(ClienteDB).all()
     return {
-        "total": len(clientes_db),
-        "clientes": clientes_db
+        "total": len(clientes),
+        "clientes": [
+            {
+                "id": c.id,
+                "nome": c.nome,
+                "email": c.email,
+                "telefone": c.telefone,
+                "nif": c.nif,
+                "data_nascimento": str(c.data_nascimento)
+            }
+            for c in clientes
+        ]
     }
 
-@router.get("/{cliente_id}")
-def buscar_cliente(cliente_id: int, clientes_db = Depends(get_clientes_db)):
-    """Buscar cliente pelo ID"""
-    #For para evitar possíveis clientes excluídos
-    for cliente in clientes_db:
-        if cliente["id"] == cliente_id:
-            return cliente
-    #Tratamento erro    
-    return {"erro" : f"Cliente ID {cliente_id} não encontrado!"}
-
-@router.get("/clientes/busca/")
+@router.get("/busca/")
 def buscar_clientes(
     nome: Optional[str] = None,
     email: Optional[str] = None,
     nif: Optional[str] = None,
     ordenar_por: str = "id",
-    ordem: str = "asc"
+    ordem: str = "asc",
+    db: Session = Depends(get_db)
 ):
     """Busca avançada de clientes"""
-    resultados = clientes_db.copy()
+    query = db.query(ClienteDB)
 
-    #Filtros
     if nome:
-        resultados = [c for c in resultados if nome.lower() in c["nome"].lower()]
-
+        query = query.filter(ClienteDB.nome.ilike(f"%{nome}%"))
     if email:
-        resultados = [c for c in resultados if email.lower() in c["email"].lower()]
-    
+        query = query.filter(ClienteDB.email.ilike(f"%{email}%"))
     if nif:
         nif_limpo = re.sub(r'\D', '', nif)
-        resultados = [c for c in resultados if nif_limpo in c["nif"]]
-  
-    #Ordenação
-    reverse = (ordem.lower() == "desc")
-    resultados.sort(key=lambda x: x.get(ordenar_por, ""), reverse=reverse)
+        query = query.filter(ClienteDB.nif.contains(nif_limpo))
 
-    return{
+    coluna = getattr(ClienteDB, ordenar_por, ClienteDB.id)
+    if ordem.lower() == "desc":
+        query = query.order_by(coluna.desc())
+    else:
+        query = query.order_by(coluna.asc())
+
+    resultados = query.all()
+
+    return {
         "total": len(resultados),
         "filtros": {"nome": nome, "email": email, "nif": nif},
         "ordenacao": {"por": ordenar_por, "ordem": ordem},
-        "clientes": resultados
+        "clientes": [
+            {
+                "id": c.id,
+                "nome": c.nome,
+                "email": c.email,
+                "telefone": c.telefone,
+                "nif": c.nif,
+                "data_nascimento": str(c.data_nascimento)
+            }
+            for c in resultados
+        ]
     }
 
-
-@router.put("/{cliente_id}")
-def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente):
-    """Atualizar cliente existente"""
-    for indice, cliente in enumerate(clientes_db):
-        if cliente["id"] == cliente_id:
-            cliente_dict = cliente_atualizado.dict()
-            cliente_dict["id"] = cliente_id
-            clientes_db[indice] = cliente_dict
-
-            return{
-                "mensagem" : f"Cliente ID {cliente_id} atualizado!",
-                "cliente" : cliente_dict
-            }
+@router.get("/{cliente_id}")
+def buscar_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    """Buscar cliente pelo ID"""
+    cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail=f"Cliente ID {cliente_id} não encontrado!")
 
     return {
-        "erro" : f"Cliente ID {cliente_id} não encontrado!"
+        "id": cliente.id,
+        "nome": cliente.nome,
+        "email": cliente.email,
+        "telefone": cliente.telefone,
+        "nif": cliente.nif,
+        "data_nascimento": str(cliente.data_nascimento)
+    }
+
+@router.put("/{cliente_id}")
+def atualizar_cliente(cliente_id: int, cliente_atualizado: Cliente, db: Session = Depends(get_db)):
+    """Atualizar cliente existente"""
+    cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail=f"Cliente ID {cliente_id} não encontrado!")
+
+    cliente.nome = cliente_atualizado.nome
+    cliente.email = cliente_atualizado.email
+    cliente.telefone = cliente_atualizado.telefone
+    cliente.nif = cliente_atualizado.nif
+    cliente.data_nascimento = cliente_atualizado.data_nascimento
+    db.commit()
+    db.refresh(cliente)
+
+    return {
+        "mensagem": f"Cliente ID {cliente_id} atualizado!",
+        "cliente": {
+            "id": cliente.id,
+            "nome": cliente.nome,
+            "email": cliente.email,
+            "telefone": cliente.telefone,
+            "nif": cliente.nif,
+            "data_nascimento": str(cliente.data_nascimento)
+        }
     }
 
 @router.delete("/{cliente_id}")
-def deletar_cliente(cliente_id: int):
+def deletar_cliente(cliente_id: int, db: Session = Depends(get_db)):
     """Remover cliente"""
-    for indice, cliente in enumerate(clientes_db):
-        if cliente["id"] == cliente_id:
-            cliente_removido = clientes_db.pop(indice)
+    cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail=f"Cliente ID {cliente_id} não encontrado!")
 
-            return {
-                "mensagem": f"Cliente ID {cliente_id} removido!",
-                "cliente_removido": cliente_removido,
-                "total_clientes": len(clientes_db)
-            }
-            
-    return {"erro": f"Cliente ID {cliente_id} não encontrado"}
+    nome_removido = cliente.nome
+    db.delete(cliente)
+    db.commit()
+    total = db.query(ClienteDB).count()
+
+    return {
+        "mensagem": f"Cliente ID {cliente_id} removido!",
+        "cliente_removido": nome_removido,
+        "total_clientes": total
+    }
 
 
