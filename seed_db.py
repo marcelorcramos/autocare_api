@@ -92,28 +92,28 @@ def seed_funcionarios(db):
     """Insere funcionários de exemplo no banco"""
     funcionarios = [
         Funcionario(
-            nome="António Mecânico",
-            telefone="(911) 111 111",
+            nome="António Gonçalves",
+            telefone="+351 911 111 111",
             nif="111222333",
             morada="Rua das Oficinas, 42, Lisboa",
             nivel="Full Time",
             salario=1200.00,
-            area="Mecânica Geral",
+            area="Mecânico",
             data_nascimento=date(1988, 1, 20)
         ),
         Funcionario(
-            nome="Bruno Electricista",
-            telefone="(922) 222 222",
+            nome="Bruno Ferreira",
+            telefone="+351 922 222 222",
             nif="444555666",
             morada="Av. da Liberdade, 100, Porto",
             nivel="Full Time",
             salario=1350.00,
-            area="Electricidade Auto",
+            area="Electricista",
             data_nascimento=date(1992, 6, 14)
         ),
         Funcionario(
-            nome="Carla Recepção",
-            telefone="(933) 333 333",
+            nome="Carla Mendes",
+            telefone="+351 933 333 333",
             nif="777888999",
             morada=None,
             nivel="Part Time",
@@ -122,8 +122,8 @@ def seed_funcionarios(db):
             data_nascimento=date(2000, 9, 5)
         ),
         Funcionario(
-            nome="Daniel Pintura",
-            telefone="(944) 444 444",
+            nome="Daniel Sousa",
+            telefone="+351 944 444 444",
             nif="112233445",
             morada="Rua do Comercio, 7, Braga",
             nivel="Full Time",

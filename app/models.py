@@ -100,16 +100,15 @@ class Funcionario(BaseModel):
         #Remove tudo que não é número
         numeros = re.sub(r'\D', '', v)
 
-        if len(numeros) < 9 or len(numeros) > 12:
-            raise ValueError('Telefone deve ter entre 9 a 12 dígitos')
+        # Se já tem o indicativo 351, remove para validar os 9 dígitos
+        if numeros.startswith('351') and len(numeros) == 12:
+            numeros = numeros[3:]
 
-        #Formata: +351 XX XXX XXXX ou 9XX XXX XXX
-        if len(numeros) == 9:
-            return f"({numeros[:3]}) {numeros[3:6]} {numeros[6:]}"
-        elif len(numeros) == 11 and numeros.startswith('351'):
-            return f"+{numeros:3} {numeros[3:5]} {numeros[5:8]} {numeros[8:]}"
-        else:
-            return f"{numeros[:3]} {numeros[3:6]} {numeros[6:]}"
+        if len(numeros) != 9:
+            raise ValueError('Telefone deve ter 9 dígitos (sem indicativo)')
+
+        # Formata sempre no padrão português: +351 XXX XXX XXX
+        return f"+351 {numeros[:3]} {numeros[3:6]} {numeros[6:]}"
 
     @validator('data_nascimento')
     def validar_data_nascimento(cls, v):
