@@ -1,8 +1,5 @@
 """
-Schemas Pydantic para Cliente — validação de dados de entrada/saída.
-
-ClienteCreate: usado para criar/atualizar (dados que vêm do usuário)
-ClienteResponse: usado para devolver dados (inclui o ID do banco)
+Schemas Pydantic para Funcionario — validação de dados de entrada/saída.
 """
 
 import re
@@ -11,12 +8,15 @@ from datetime import date
 from typing import Optional
 
 
-class ClienteCreate(BaseModel):
-    """Schema para criar/atualizar um cliente"""
+class FuncionarioCreate(BaseModel):
+    """Schema para criar/atualizar um funcionário"""
     nome: str
-    email: str
     telefone: str
     nif: str
+    morada: Optional[str] = None
+    nivel: str
+    salario: str
+    area: str
     data_nascimento: date
 
     @validator('nif')
@@ -25,31 +25,6 @@ class ClienteCreate(BaseModel):
         if len(numeros) != 9:
             raise ValueError('Nif deve conter 9 dígitos')
         return numeros
-
-    @validator('email')
-    def validar_email(cls, v):
-        email = v.strip()
-
-        if '@' not in email:
-            raise ValueError('Email deve conter @')
-
-        if '.com' not in email:
-            raise ValueError('Email deve conter .com')
-
-        partes = email.split('@')
-        if len(partes) != 2:
-            raise ValueError('Email deve conter apenas um @')
-
-        if '.com' not in partes[1]:
-            raise ValueError('.com deve vir após o @')
-
-        if not partes[0]:
-            raise ValueError('Email deve ter um nome de usuário')
-
-        if not partes[1].replace('.com', ''):
-            raise ValueError('Email deve ter um domínio válido')
-
-        return email.lower()
 
     @validator('telefone')
     def validar_telefone(cls, v):
@@ -68,22 +43,49 @@ class ClienteCreate(BaseModel):
         data_atual = date.today()
         idade = data_atual.year - v.year - ((data_atual.month, data_atual.day) < (v.month, v.day))
         if idade < 18:
-            raise ValueError('Cliente deve ter pelo menos 18 anos')
+            raise ValueError('O funcionário deve ter pelo menos 18 anos')
         if v > data_atual:
             raise ValueError('Data de nascimento não pode ser no futuro')
         if idade > 120:
             raise ValueError('Data de nascimento muito antiga')
         return v
 
+    @validator('nivel')
+    def validar_nivel(cls, v):
+        nivel = v.strip().lower()
+        niveis_validos = ['part time', 'part-time', 'full time', 'full-time']
+        if nivel not in niveis_validos:
+            raise ValueError('Nível deve ser "Part Time" ou "Full Time"')
+        if 'part' in nivel:
+            return 'Part Time'
+        return 'Full Time'
 
-class ClienteResponse(BaseModel):
-    """Schema para retornar um cliente (inclui ID)"""
+    @validator('salario')
+    def validar_salario(cls, v, values):
+        numeros = re.sub(r'\D', '', v)
+        try:
+            salario = float(numeros)
+        except ValueError:
+            raise ValueError('Salario inválido')
+        nivel = values.get('nivel')
+        if nivel == 'Full Time' and salario < 920.00:
+            raise ValueError('Salário Full Time não pode ser menor que 920€')
+        if nivel == 'Part Time' and salario < 460.00:
+            raise ValueError('Salário Part Time não pode ser menor que 460€')
+        return salario
+
+
+class FuncionarioResponse(BaseModel):
+    """Schema para retornar um funcionário (inclui ID)"""
     id: int
     nome: str
-    email: str
     telefone: str
     nif: str
+    morada: Optional[str] = None
+    nivel: str
+    salario: float
+    area: str
     data_nascimento: date
 
     class Config:
-        from_attributes = True  # permite converter objetos SQLAlchemy → Pydantic
+        from_attributes = True
