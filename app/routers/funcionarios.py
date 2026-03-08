@@ -137,3 +137,54 @@ def buscar_funcionario(funcionario_id: int, db: Session = Depends(get_db)):
         "area": funcionario.area,
         "data_nascimento": str(funcionario.data_nascimento)
     }
+
+@router.put("/{funcionario_id}")
+def atualizar_funcionario(funcionario_id: int, funcionario_atualizado: Funcionario, db: Session = Depends(get_db)):
+    """Atualizar funcionário existente"""
+    funcionario = db.query(FuncionarioDB).filter(FuncionarioDB.id == funcionario_id).first()
+    if not funcionario:
+        raise HTTPException(status_code=404, detail=f"Funcionário ID {funcionario_id} não encontrado!")
+
+    funcionario.nome = funcionario_atualizado.nome
+    funcionario.telefone = funcionario_atualizado.telefone
+    funcionario.nif = funcionario_atualizado.nif
+    funcionario.morada = funcionario_atualizado.morada
+    funcionario.nivel = funcionario_atualizado.nivel
+    funcionario.salario = funcionario_atualizado.salario
+    funcionario.area = funcionario_atualizado.area
+    funcionario.data_nascimento = funcionario_atualizado.data_nascimento
+    db.commit()
+    db.refresh(funcionario)
+
+    return {
+        "mensagem": f"Funcionário ID {funcionario_id} atualizado!",
+        "funcionario": {
+            "id": funcionario.id,
+            "nome": funcionario.nome,
+            "telefone": funcionario.telefone,
+            "nif": funcionario.nif,
+            "morada": funcionario.morada,
+            "nivel": funcionario.nivel,
+            "salario": funcionario.salario,
+            "area": funcionario.area,
+            "data_nascimento": str(funcionario.data_nascimento)
+        }
+    }
+
+@router.delete("/{funcionario_id}")
+def deletar_funcionario(funcionario_id: int, db: Session = Depends(get_db)):
+    """Remover funcionário"""
+    funcionario = db.query(FuncionarioDB).filter(FuncionarioDB.id == funcionario_id).first()
+    if not funcionario:
+        raise HTTPException(status_code=404, detail=f"Funcionário ID {funcionario_id} não encontrado!")
+
+    nome_removido = funcionario.nome
+    db.delete(funcionario)
+    db.commit()
+    total = db.query(FuncionarioDB).count()
+
+    return {
+        "mensagem": f"Funcionário ID {funcionario_id} removido!",
+        "funcionario_removido": nome_removido,
+        "total_funcionarios": total
+    }
