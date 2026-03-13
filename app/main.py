@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Depends
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from app.database import engine, get_db
 from app.db_models import Base, Cliente, Funcionario, Veiculo
@@ -9,6 +13,11 @@ from app.routers import clientes_router, veiculos_router, funcionarios_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="AutoCare API", version="1.0.0")
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 app.include_router(clientes_router)
 app.include_router(veiculos_router) 
@@ -27,6 +36,11 @@ def health(db: Session = Depends(get_db)):
         "veiculos_cadastrados": db.query(Veiculo).count(),
         "funcionarios_cadastrados": db.query(Funcionario).count()
     }
+
+
+@app.get("/frontend", include_in_schema=False)
+def frontend_page():
+    return FileResponse(STATIC_DIR / "index.html")
 
 if __name__ == "__main__":
     import uvicorn

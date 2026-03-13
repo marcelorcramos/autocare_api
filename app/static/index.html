@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoCare Frontend Demo</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="ambient-shape ambient-shape-1"></div>
+  <div class="ambient-shape ambient-shape-2"></div>
+
+  <header class="hero">
+    <p class="kicker">AutoCare API + Frontend</p>
+    <h1>Conexao direta com os endpoints</h1>
+    <p>
+      Esta pagina consome 1 endpoint de cada modulo da API para mostrar,
+      na pratica, como o frontend conversa com o backend.
+    </p>
+    <p class="api-base">Base da API: <strong id="api-base-value"></strong></p>
+    <button id="load-all" class="btn-primary">Carregar os 3 endpoints</button>
+  </header>
+
+  <main class="panel-grid">
+    <section class="panel" id="panel-clientes">
+      <div class="panel-head">
+        <h2>Clientes</h2>
+        <p>Endpoint: <code>GET /clientes/</code></p>
+        <button class="btn-secondary" data-resource="clientes">Buscar clientes</button>
+        <span class="status" id="status-clientes">Aguardando acao</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Email</th>
+              <th>Telefone</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-clientes">
+            <tr><td colspan="4" class="empty">Nenhum dado carregado ainda.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-funcionarios">
+      <div class="panel-head">
+        <h2>Funcionarios</h2>
+        <p>Endpoint: <code>GET /funcionarios/</code></p>
+        <button class="btn-secondary" data-resource="funcionarios">Buscar funcionarios</button>
+        <span class="status" id="status-funcionarios">Aguardando acao</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Area</th>
+              <th>Nivel</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-funcionarios">
+            <tr><td colspan="4" class="empty">Nenhum dado carregado ainda.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-veiculos">
+      <div class="panel-head">
+        <h2>Veiculos</h2>
+        <p>Endpoint: <code>GET /veiculos/</code></p>
+        <button class="btn-secondary" data-resource="veiculos">Buscar veiculos</button>
+        <span class="status" id="status-veiculos">Aguardando acao</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Placa</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-veiculos">
+            <tr><td colspan="4" class="empty">Nenhum dado carregado ainda.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

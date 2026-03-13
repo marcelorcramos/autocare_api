@@ -94,6 +94,7 @@ Após executar, abra no navegador:
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 - **Health Check**: http://localhost:8000/health
+- **Frontend Demo**: http://localhost:8000/frontend
 
 ---
 
