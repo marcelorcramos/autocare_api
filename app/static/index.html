@@ -93,6 +93,24 @@
         </table>
       </div>
     </section>
+
+    <section class="panel full-width" id="panel-busca-cliente">
+      <div class="panel-head">
+        <h2>Buscar Cliente por ID</h2>
+        <p>Endpoint: <code>GET /clientes/{id}</code></p>
+        <div class="search-form">
+          <input 
+            type="number" 
+            id="cliente-id-input" 
+            placeholder="Digita o ID do cliente (ex: 1)" 
+            min="1"
+          />
+          <button class="btn-secondary" id="btn-buscar-cliente">Buscar cliente</button>
+        </div>
+        <span class="status" id="status-busca-cliente">Aguardando acao</span>
+      </div>
+      <div id="resultado-cliente" class="card-resultado"></div>
+    </section>
   </main>
 
   <script src="/static/script.js"></script>

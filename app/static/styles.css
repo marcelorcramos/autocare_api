@@ -246,6 +246,80 @@ th {
   }
 }
 
+.panel.full-width {
+  grid-column: 1 / -1;
+}
+
+.search-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.search-form input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid rgba(31, 45, 42, 0.2);
+  border-radius: 10px;
+  font-family: "Outfit", sans-serif;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.85);
+  transition: border-color 160ms ease;
+}
+
+.search-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.card-resultado {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(31, 45, 42, 0.15);
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-resultado.empty {
+  color: rgba(31, 45, 42, 0.6);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+.cliente-card {
+  width: 100%;
+}
+
+.cliente-card h3 {
+  margin: 0 0 14px;
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.cliente-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(31, 45, 42, 0.08);
+}
+
+.cliente-field:last-child {
+  border-bottom: none;
+}
+
+.cliente-field-label {
+  font-weight: 600;
+  color: rgba(31, 45, 42, 0.8);
+}
+
+.cliente-field-value {
+  text-align: right;
+  color: var(--ink);
+}
+
 @media (max-width: 700px) {
   body {
     padding: 24px 12px 28px;
@@ -253,5 +327,13 @@ th {
 
   .panel-grid {
     grid-template-columns: 1fr;
+  }
+
+  .search-form {
+    flex-direction: column;
+  }
+
+  .search-form input {
+    width: 100%;
   }
 }
